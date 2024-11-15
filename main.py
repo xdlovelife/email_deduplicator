@@ -1,15 +1,20 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
+import sys
+import traceback
 
 class EmailDuplicateRemover:
     def __init__(self):
-        self.window = tk.Tk()
-        self.window.title("邮件去重工具")
-        self.window.geometry("400x250")
-        
-        # 创建界面元素
-        self.create_widgets()
+        try:
+            self.window = tk.Tk()
+            self.window.title("邮件去重工具")
+            self.window.geometry("400x250")
+            
+            # 创建界面元素
+            self.create_widgets()
+        except Exception as e:
+            self.show_error("初始化错误", str(e))
         
     def create_widgets(self):
         # 使用说明标签
@@ -32,18 +37,25 @@ class EmailDuplicateRemover:
         # 状态标签
         self.status_label = tk.Label(self.window, text="")
         self.status_label.pack()
+    
+    def show_error(self, title, message):
+        messagebox.showerror(title, f"{message}\n\n{traceback.format_exc()}")
             
     def remove_duplicates(self, email_list):
-        seen = set()
-        unique_emails = []
-        
-        for email in email_list:
-            email = email.strip()
-            if email and email not in seen:
-                seen.add(email)
-                unique_emails.append(email)
-                
-        return unique_emails
+        try:
+            seen = set()
+            unique_emails = []
+            
+            for email in email_list:
+                email = email.strip()
+                if email and email not in seen:
+                    seen.add(email)
+                    unique_emails.append(email)
+                    
+            return unique_emails
+        except Exception as e:
+            self.show_error("去重错误", str(e))
+            return []
     
     def process_file(self):
         try:
@@ -63,6 +75,9 @@ class EmailDuplicateRemover:
             # 去重
             unique_emails = self.remove_duplicates(emails)
             
+            if not unique_emails:
+                return
+                
             # 直接覆盖原文件
             with open(input_file, 'w', encoding='utf-8') as f:
                 for email in unique_emails:
@@ -79,13 +94,21 @@ class EmailDuplicateRemover:
             self.status_label.config(text="处理完成！")
                 
         except Exception as e:
-            messagebox.showerror("错误", f"处理文件时出错: {str(e)}")
+            self.show_error("处理错误", str(e))
             self.status_label.config(text="处理失败！")
     
     def run(self):
-        self.window.mainloop()
+        try:
+            self.window.mainloop()
+        except Exception as e:
+            self.show_error("运行错误", str(e))
 
-# 运行程序
+def main():
+    try:
+        app = EmailDuplicateRemover()
+        app.run()
+    except Exception as e:
+        messagebox.showerror("严重错误", f"程序启动失败：{str(e)}\n\n{traceback.format_exc()}")
+
 if __name__ == "__main__":
-    app = EmailDuplicateRemover()
-    app.run()
+    main()
